@@ -1,13 +1,11 @@
 ﻿// ESConnect AI Agent API
 
-import { OpenAIStream, StreamingTextResponse } from 'ai';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 
 // Create an OpenAI API client
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 // CORS headers
 export const corsHeaders = {
@@ -25,12 +23,12 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     // Ensure API key exists
-    if (!configuration.apiKey) {
+    if (!process.env.OPENAI_API_KEY) {
       return new Response(
         JSON.stringify({
           error: 'OpenAI API key not configured',
         }),
-        { status: 500 }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -47,26 +45,39 @@ export async function POST(req: Request) {
     // Add system message to the beginning of the messages array
     const augmentedMessages = [systemMessage, ...messages];
 
-    // Request the OpenAI API for the response
-    const response = await openai.createChatCompletion({
+    // Request the OpenAI API for the response (non-streaming)
+    const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
-      stream: true,
       temperature: 0.7,
       messages: augmentedMessages,
     });
 
-    // Convert the response into a friendly text-stream
-    const stream = OpenAIStream(response);
-
-    // Return a StreamingTextResponse, which can be consumed by the client
-    return new StreamingTextResponse(stream, { headers: corsHeaders });
+    // Return the response
+    return new Response(
+      JSON.stringify({ 
+        role: 'assistant',
+        content: response.choices[0].message.content 
+      }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
+    );
   } catch (error) {
     console.error('Error in chat API:', error);
     return new Response(
       JSON.stringify({
         error: 'An error occurred during your request.',
       }),
-      { status: 500, headers: corsHeaders }
+      { 
+        status: 500, 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     );
   }
 }
