@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { formatDate } from '@/lib/utils';
+import { formatDate } from '../lib/utils';
 
 type MarketData = {
   date: string;

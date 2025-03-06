@@ -1,7 +1,7 @@
 ﻿import Image from 'next/image';
 import Link from 'next/link';
-import QualiaChat from '@/components/QualiaChat';
-import EnergyMarketWidget from '@/components/EnergyMarketWidget';
+import QualiaChat from '../components/QualiaChat';
+import EnergyMarketWidget from '../components/EnergyMarketWidget';
 
 export default function Home() {
   return (
